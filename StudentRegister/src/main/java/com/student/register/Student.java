@@ -1,4 +1,4 @@
-package com.student.details;
+package com.student.register;
 
 import java.io.Serializable;
 
@@ -8,7 +8,7 @@ public class Student implements Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -5452435101587982153L;
+	private static final long serialVersionUID = 1611722012239709883L;
 	private String name;
 	private int id;
 	private int age;
