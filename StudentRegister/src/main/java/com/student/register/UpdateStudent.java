@@ -1,86 +1,51 @@
 package com.student.register;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-import java.util.InputMismatchException;
-import java.util.LinkedList;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import com.google.appengine.api.datastore.*;
 
 /**
  * Servlet implementation class UpdateStudent
  */
 @WebServlet(
-	    name = "UpdateStudent",
-	    urlPatterns = {"/update"}
-	)
+		name = "UpdateStudent",
+		urlPatterns = {"/updateinfo"}
+		)
 public class UpdateStudent extends HttpServlet {
-	
+
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -6996557647110748832L;
-	public static LinkedList<Student> studentLinkedListObject =new LinkedList<Student>();
 
-	@SuppressWarnings("unchecked")
-	static boolean updateDetails(int studentIds,String updatedName,int updateAge){
-		boolean idExist=false;
-		try {
-			FileInputStream fis = new FileInputStream("StudentDetails.txt");
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			studentLinkedListObject.clear();
-			studentLinkedListObject.addAll( (LinkedList<Student>) ois.readObject());
-			ois.close();
-
-		} catch (FileNotFoundException e) { }
-		catch (Exception e) {  }
-		try {
-			if(!studentLinkedListObject.isEmpty())
-			{
-				for(Student updateDetailsObject :studentLinkedListObject) {
-					if(updateDetailsObject.getId()==studentIds) {
-						idExist=true;
-					}
-					if(idExist) {	
-						boolean checkAllLettersAreCharacter =updatedName.chars().allMatch(Character::isLetter);
-						if(!checkAllLettersAreCharacter) {
-							throw new InputMismatchException();
-						}
-						updateDetailsObject.setName(updatedName);
-						updateDetailsObject.setAge(updateAge);
-						System.out.println("Record Updated");
-					}
-				}
-			}
-		} catch (InputMismatchException e) {
-			System.out.println("Enter Valid Details\n");
-		} 
-		try {
-			FileOutputStream fos = new FileOutputStream("StudentDetails.txt");
-			ObjectOutputStream oos = new ObjectOutputStream(fos); 
-			oos.writeObject(studentLinkedListObject);                      
-			oos.close();
-		} catch (Exception e) {  }
-		
-		return idExist;
-	}
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
+
+		response.setContentType("text/html");
+
+		PrintWriter print=response.getWriter();
+
+		print.println("<html><head>");
+		print.println("<title>Student Corner</title>");
+		print.println("</head><body>");
+		print.println("<h2 align=\"center\">Update Student Details</h2><br><br>");
+		print.println("<form action=\"updateinfo\" method=\"post\">"+
+				"Enter ID: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"number\" name=\"id\"><br><br><br> "+
+				"Update Name: <input type=\"text\" name=\"name\"><br><br><br> "+
+				"Update Age:&nbsp;&nbsp;&nbsp; <input type=\"number\" name=\"age\"><br><br><br>"+
+				"<button type=\"submit\">Update Details</button>"+
+				"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type=\"submit\" formaction=\"/home\">Back</button></form>");
+		print.println("</body></html>");
 	}
 
 	/**
@@ -88,23 +53,29 @@ public class UpdateStudent extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		boolean idExist=false;
+		DatastoreService ds= DatastoreServiceFactory.getDatastoreService();
+
 		int updateId=Integer.parseInt(request.getParameter("id"));
 		String updateName=request.getParameter("name");
 		int updateAge=Integer.parseInt(request.getParameter("age"));
-		
-		idExist=updateDetails(updateId,updateName,updateAge);
 
+		Query q=new Query("Student");
+		PreparedQuery pq=ds.prepare(q);
+		for(Entity u1: pq.asIterable()) {
+			int getId = Integer.parseInt(u1.getProperty("Id").toString());
+			if(updateId==getId) {
+				u1.setProperty("Name", updateName);
+				u1.setProperty("Age", updateAge);
+				ds.put(u1);
+			}
+		}
 		PrintWriter pw=response.getWriter();
 		pw.println("<html><body>");
 
-		if(idExist==false)
-			pw.println("ID does not Exist.<br>Enter Valid Id.");
-		else
-			pw.println("The Desired Record is Updated.");
+		pw.println("The Desired Record is Updated.");
 
 
-		pw.println("<br><br><form method=\"get\" action=\"index.html\">\r\n" + 
+		pw.println("<br><br><form method=\"get\" action=\"/home\">\r\n" + 
 				"    <button type=\"submit\">Back</button>\r\n" + 
 				"</form>");
 		pw.println("</body></html>");

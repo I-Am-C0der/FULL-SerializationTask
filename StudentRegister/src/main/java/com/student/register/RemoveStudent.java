@@ -1,110 +1,51 @@
 package com.student.register;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-import java.util.InputMismatchException;
-import java.util.LinkedList;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query;
 
 /**
  * Servlet implementation class RemoveStudent
  */
 @WebServlet(
-	    name = "RemoveStudent",
-	    urlPatterns = {"/remove"}
-	)
+		name = "RemoveStudent",
+		urlPatterns = {"/removeinfo"}
+		)
 public class RemoveStudent extends HttpServlet {
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -4942312224163506173L;
-	public static LinkedList<Student> studentLinkedListObject =new LinkedList<Student>();
-
-
-	@SuppressWarnings("unchecked")
-	static boolean removeById(int removeId){
-		boolean idExist=false;
-		try {
-			FileInputStream fis = new FileInputStream("StudentDetails.txt");
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			studentLinkedListObject.clear();
-			studentLinkedListObject.addAll( (LinkedList<Student>) ois.readObject());
-			ois.close();
-
-		} catch (FileNotFoundException e) { }
-		catch (Exception e) { e.printStackTrace(); }
-		try {
-
-			if(!studentLinkedListObject.isEmpty())
-			{ for(Student idCheck :studentLinkedListObject) {
-
-				if(idCheck.getId()==removeId) {
-					idExist=true;
-					break;
-				}
-			}
-			}
-			System.out.println(idExist);
-			if(idExist==true)
-				studentLinkedListObject.removeIf(e -> e.getId()==(removeId));
-
-
-		} catch (InputMismatchException e) {
-			System.out.println("Enter Valid ID\n");
-
-		} 
-		try {
-			FileOutputStream fos = new FileOutputStream("StudentDetails.txt");
-			ObjectOutputStream oos = new ObjectOutputStream(fos); 
-			oos.writeObject(studentLinkedListObject);                      
-			oos.close();
-		} catch (Exception e) {  }
-
-		return idExist;
-	}
-	
-	@SuppressWarnings("unchecked")
-	static void removeAll(){
-		try {
-			FileInputStream fis = new FileInputStream("StudentDetails.txt");
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			studentLinkedListObject.clear();
-			studentLinkedListObject.addAll( (LinkedList<Student>) ois.readObject());
-			ois.close();
-
-		} catch (FileNotFoundException e) { }
-		catch (Exception e) { e.printStackTrace(); }
-
-		studentLinkedListObject.clear();
-
-
-		try {
-			FileOutputStream fos = new FileOutputStream("StudentDetails.txt");
-			ObjectOutputStream oos = new ObjectOutputStream(fos); 
-			oos.writeObject(studentLinkedListObject);                      
-			oos.close();
-		} catch (Exception e) {  }
-
-	}
-
+	private static final long serialVersionUID = -57105462738487746L;
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
+        response.setContentType("text/html");
+
+		PrintWriter print=response.getWriter();
+
+		print.println("<html><head>");
+		print.println("<title>Student Corner</title>");
+		print.println("</head><body>");
+		print.println("<h2 align=\"center\">Remove Student Details</h2><br><br>");
+		print.println("<form action=\"removeinfo\" method=\"post\">" +
+				"<input type=\"radio\" name=\"remove\" value=\"1\">&nbsp;Remove by ID<br>"+
+				"ID: <input type=\"number\" name=\"id\"><br>"+
+				"<br> <input type=\"radio\" name=\"remove\" value=\"2\">&nbsp;Remove All<br><br>"+
+				"<button type=\"submit\">Remove</button>"+
+				"		<button type=\"submit\" formaction=\"/home\">Back</button></form>");
+		print.println("</body></html>");
 	}
 
 	/**
@@ -113,29 +54,36 @@ public class RemoveStudent extends HttpServlet {
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
+		DatastoreService ds= DatastoreServiceFactory.getDatastoreService();
 
 		int removeOption =Integer.parseInt( request.getParameter("remove"));
-		boolean idExist=false;
 		if(removeOption==1) {
 
 			int removeId = Integer.parseInt(request.getParameter("id"));
-			idExist=removeById(removeId);
+			Query q=new Query("Student");
+			PreparedQuery pq=ds.prepare(q);
+			for(Entity u1: pq.asIterable()) {
+				int getId = Integer.parseInt(u1.getProperty("Id").toString());
+				if(removeId==getId)
+					ds.delete(u1.getKey());
+			}
 		}
 		else {
-			idExist=true;
-			removeAll();
+			Query q=new Query("Student");
+			PreparedQuery pq=ds.prepare(q);
+			for(Entity u1: pq.asIterable()) {
+				ds.delete(u1.getKey());
+			}
 		}
 
 		PrintWriter pw=response.getWriter();
 		pw.println("<html><body>");
 
-		if(idExist==false)
-			pw.println("ID does not Exist.<br>Enter Valid Id.");
-		else
-			pw.println("Desired Records are removed.");
+
+		pw.println("Desired Records are removed.");
 
 
-		pw.println("<br><br><form method=\"get\" action=\"/index.html\">\r\n" + 
+		pw.println("<br><br><form method=\"get\" action=\"/home\">\r\n" + 
 				"    <button type=\"submit\">Back</button>\r\n" + 
 				"</form>");
 		pw.println("</body></html>");
