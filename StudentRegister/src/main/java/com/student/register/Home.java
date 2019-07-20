@@ -13,8 +13,11 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Servlet implementation class Home
  */
-@WebServlet("/HomePage")
-public class HomePage extends HttpServlet {
+@WebServlet(
+		name = "Home",
+		urlPatterns = {"/home"}
+		)
+public class Home extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
   
