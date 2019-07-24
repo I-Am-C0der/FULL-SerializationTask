@@ -7,6 +7,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  * Servlet implementation class AddStudent
@@ -31,21 +32,23 @@ public class Register extends HttpServlet {
 		response.setContentType("text/html");
 
 		PrintWriter pw = response.getWriter();
+		HttpSession session = request.getSession(false);
 
+		if (session != null) {
 		pw.println("<html><head>");
 		pw.println("<title>Student Corner</title>");
 		pw.println("</head><body>");
 		pw.println("<h2 align=\"center\">Add Student Details</h2><br><br>");
 
-		pw.println(
-				"<form action=\"register\" method=\"post\">" + "Name: <input type=\"text\" name=\"name\"><br><br><br> "
-						+ "Age: &nbsp;&nbsp;&nbsp;<input type=\"number\" name=\"age\"><br><br><br> "
-						+ "<button type=\"submit\">Add Student</button>"
-						+ "&nbsp;&nbsp;&nbsp;<button type=\"submit\" formaction=\"/home\">Back</button></form>");
+		pw.println("<form action=\"register\" method=\"post\">" 
+						+ "<button type=\"submit\" formaction=\"/home\">Back</button><br><br><br>"
+						+ "Name: <input type=\"text\" name=\"name\" required/><br><br><br> "
+						+ "Age: &nbsp;&nbsp;&nbsp;<input type=\"number\" name=\"age\" required/><br><br><br> "
+						+ "<button type=\"submit\">Add Student</button></form>");
 		pw.println("</body></html>");
 
 	}
-
+	}
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
 	 *      response)
@@ -56,8 +59,9 @@ public class Register extends HttpServlet {
 		boolean invalidDetails;
 		try {
 			String name = request.getParameter("name");
+			System.out.println(name);
 			int age = Integer.parseInt(request.getParameter("age"));
-			invalidDetails = HelperClass.addStudent(name, age);
+			invalidDetails = Helper.addStudent(name, age);
 		} catch (NumberFormatException e) {
 			invalidDetails = true;
 		}

@@ -4,21 +4,17 @@ import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 
-public class HelperClass {
+public class Helper {
 	public static boolean addStudent(String name, int age) {
-		int studentId = 0;
 		boolean invalidDetails = false;
-		DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-		studentId = QueryHelperClass.queryOperation();
 		invalidDetails = checkCharacter(name);
 		if (!invalidDetails) {
-			studentId++;
-			Entity e = new Entity("Student");
-			e.setProperty("Id", studentId);
-			e.setProperty("Name", name);
-			e.setProperty("Age", age);
-			ds.put(e);
+			Entity entity = new Entity("Student");
+			entity.setProperty("Name", name);
+			entity.setProperty("Age", age);
+			datastore.put(entity);
 		}
 
 		return invalidDetails;
